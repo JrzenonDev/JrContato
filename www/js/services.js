@@ -10,7 +10,9 @@ angular.module('starter.service', [])
             // Faz o parser do Json
             return angular.fromJson(tarefas);
          }
+
          return [];
+
     }
 
     function salvar(tarefas) {

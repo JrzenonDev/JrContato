@@ -28,6 +28,7 @@ angular.module('starter.controllers', ['ionic'])
         }
         TarefasService.salvar($scope.items);
     }
+
   };
 
   $scope.moveItem = function(item, fromIndex, toIndex) {
