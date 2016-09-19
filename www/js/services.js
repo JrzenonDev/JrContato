@@ -1,45 +1,89 @@
-angular.module('starter.service', [])
+angular.module('starter.services', [])
 
-.factory('TarefasService', function() {
+.factory('TarefasService', function($q){
 
-    var chave = 'tarefasIonic';
+    var db;
 
-    function getTarefas() {
-         var tarefas = window.localStorage[chave];
-         if(tarefas) {
-            // Faz o parser do Json
-            return angular.fromJson(tarefas);
-         }
+    function createDB(){
 
-         return [];
-
+      try {
+        db = openDatabase('tarefasDB', '1.0', 'db app ionic', 2 * 1024 * 1024);
+        db.transaction(function (tx) {
+          tx.executeSql('CREATE TABLE IF NOT EXISTS tarefas (task_id INTEGER PRIMARY KEY ASC, task_name varchar(200))');
+        });
+      }catch (err){
+        alert('Erro: ' + erro);
+      }
+      console.log('Banco de dados criado/aberto');
     }
 
-    function salvar(tarefas) {
-        window.localStorage[chave] = angular.toJson(tarefas);
+    function read(){
+      return promessaQuery('SELECT * from tarefas',
+        callBackSucesso, callBackErro);
     }
 
-    function obterProxId() {
-        var idTarefa = window.localStorage['tarefaIonic'];
-        if(idTarefa){
-            idTarefa++;
-        } else{
-            idTarefa = 1;
+    function create(nome){
+      return promessaQuery('INSERT INTO tarefas(task_name) VALUES ("' + nome +'")',
+        callBackSucesso, callBackErro);
+    }
+
+    function update(nome, id){
+      return promessaQuery('UPDATE tarefas SET task_name = "' + nome +'" WHERE task_id = ' + id,
+        callBackSucesso, callBackErro);
+    }
+
+    function deleteTarefa(id){
+      return promessaQuery('DELETE FROM tarefas WHERE task_id = ' + id,
+        callBackSucesso, callBackErro);
+    }
+
+    function promessaQuery(query, sucessCallback, errorCallback){
+        var deferido = $q.defer();
+        db.transaction(function (tx) {
+          tx.executeSql(query, [], sucessCallback(deferido),
+            errorCallback(deferido));
+        });
+        return deferido.promise;
+    }
+
+    function callBackSucesso(deferido){
+        return function (tx, results){
+          var len = results.rows.length, i;
+          var resultados = [];
+          for (i = 0; i < len; i++) {
+              var tarefa = {
+                  id : results.rows.item(i).task_id,
+                  nome: results.rows.item(i).task_name
+              }
+              resultados.push(tarefa);
+            console.log(results.rows.item(i).task_name);
+          }
+          deferido.resolve(resultados);
+        };
+    }
+
+    function callBackErro(deferido){
+        return function (tx, results){
+            var resultados = [];
+            deferido.resolve(resultados);
         }
-        window.localStorage['tarefaIonic'] = idTarefa;
-        return idTarefa;
     }
-    // Expoem as funcoes criadas
+
     return {
-        all: function() {
-            return getTarefas();
-        },
-        salvar: function(tarefas) {
-            return salvar(tarefas);
-        },
-        obterProxId: function() {
-            return obterProxId();
-        }
+      createDB: function(){
+        return createDB();
+      },
+      read: function(){
+        return read();
+      },
+      update: function(nome, id){
+        return update(nome, id);
+      },
+      create: function(nome){
+        return create(nome);
+      },
+      deleteTarefa: function(id){
+        return deleteTarefa(id);
+      }
     }
-
 });
