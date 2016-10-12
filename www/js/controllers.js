@@ -6,7 +6,14 @@ angular.module('starter.controllers', ['ionic'])
     showDelete: false
   };
 
-  TarefasService.createDB();
+  document.addEventListener('deviceready', onDeviceReady, false); // Para SQLite
+
+  // Cordova is ready
+  function onDeviceReady() { // Para SQLite
+      TarefasService.createDB();
+      $scope.lerTarefas();
+  } // Para SQLite
+
 
   //$scope.items = TarefasService.read();
 
@@ -15,8 +22,6 @@ angular.module('starter.controllers', ['ionic'])
           $scope.items = resultados;
       });
   }
-
-  $scope.lerTarefas();
 
   $scope.add = function() {
       var task = prompt('Entre com a tarefa');

@@ -7,10 +7,19 @@ angular.module('starter.services', [])
     function createDB(){
 
       try {
-        db = openDatabase('tarefasDB', '1.0', 'db app ionic', 2 * 1024 * 1024);
-        db.transaction(function (tx) {
-          tx.executeSql('CREATE TABLE IF NOT EXISTS tarefas (task_id INTEGER PRIMARY KEY ASC, task_name varchar(200))');
-        });
+
+        //db = openDatabase('tarefasDB', '1.0', 'db app ionic', 2 * 1024 * 1024); // Conexao com Web SQL
+
+        db = window.sqlitePlugin.openDatabase({name: 'tarefasDB.db', location: 'default'}, function(db) {
+            db.transaction(function(tx) { // Para SQLite
+                db.transaction(function (tx) {
+                    tx.executeSql('CREATE TABLE IF NOT EXISTS tarefas (task_id INTEGER PRIMARY KEY ASC, task_name varchar(200))');
+                });
+            }, function(err) { // Para SQLite
+                console.log('Open database ERROR: ' + JSON.stringify(err)); // Para SQLite
+            }); // Para SQLite
+        }); // Para SQLite
+
       }catch (err){
         alert('Erro: ' + erro);
       }
